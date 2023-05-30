@@ -1,0 +1,5 @@
+{
+  "address_Grafana" : "https://grafana-piiot-ro-oto.apps.otp.caas.sdi.pmi/d/{LuHash}/smc-line-overview-{LuName}?orgId={orgId}&from={StartTimestamp}&to={EndTimestamp}",
+  "address_Loss_Tree" : "http://{login}:{password}@ots.app.pmi/db.aspx?table=SPA_NormPeriodLossTree&act=query&db_Normalize=0&eoa=x&db_Line={spaLineName}&db_SegmentDateMin={Date}&db_ShiftStart={StartShift}&db_ShiftEnd={EndShift}&db_Language=OEM&db_LongStopDetails=3&db_ReasonCNT=3000000&db_AllUnplannedDT=x&db_AnalizeEfficiency=x&db_ExcludedLossTree=x",
+  "address_Line_Over" : "http://{login}:{password}@ms.app.pmi/db.aspx?tables=VL_StopEvents+VL_Equipment&display=raw&act=query&db_Line={spaLineName}&db_SegmentDate={Date}"
+}

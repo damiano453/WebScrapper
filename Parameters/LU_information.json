@@ -1,0 +1,24 @@
+{
+  "LU_list" : {
+    "lu11" : {
+      "LuHash" : "HEJb3226ffsfl",
+      "orgId" : 3,
+      "spaLineName" : "RO10-RS-P1-L311",
+      "spaLineNames" : {
+        "crimper": "RO10-RS-P1-L311-TB11-CLTC",
+        "combiner": "RO10-RS-P1-L311-CM11-COMB",
+        "catturn": "RO10-RS-P1-L311-CM11-CATU"
+      }
+    },
+    "lu12" : {
+      "LuHash" : "HEJc3226ffsfl",
+      "orgId" : 3,
+      "spaLineName" : "RO10-RS-P1-L312",
+      "spaLineNames" : {
+        "crimper": "RO10-RS-P1-L312-TB12-CLTC",
+        "combiner": "RO10-RS-P1-L312-CM12-COMB",
+        "catturn": "RO10-RS-P1-L312-CM12-CATU"
+      }
+    }
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "length_of_shift" : 12,
+  "no_of_shifts" : 2,
+  "first_shift" : 2,
+  "start_date" : "23-04-03 19:00:00",
+  "end_date" : "23-04-05 07:00:00",
+  "format_date" : "%y-%m-%d %H:%M:%S",
+  "w_wo_SMC" : "wo SM"
+}
