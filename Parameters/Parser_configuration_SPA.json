@@ -1,0 +1,200 @@
+{
+  "Date" : {
+    "value" : [],
+    "localisation" : {
+      "Xpath_table_raw" : "",
+      "Xpath_item" : "",
+      "key_word" : "",
+      "function" : "assign"
+    }
+  },
+  "Shift" : {
+    "value" : [],
+    "localisation" : {
+      "Xpath_table_raw": "",
+      "Xpath_item" : "",
+      "key_word" : "",
+      "function" : "assign"
+    }
+  },
+  "w/wo SM" : {
+    "value" : [],
+    "localisation" : {
+      "Xpath_table_raw" : "",
+      "Xpath_item" : "",
+      "key_word" : "",
+      "function" : "assign"
+    }
+  },
+  "Net production [Mio]" : {
+    "value" : [],
+    "localisation" : {
+      "Xpath_table_raw" : "/html/body/table[3]/tbody/tr[{}]/td[2]/table/tbody/tr/td[2]",
+      "Xpath_item" : "/html/body/table[3]/tbody/tr[{}]/td[10]",
+      "key_word" : "Working time",
+      "function" : "extract_split_number"
+    }
+  },
+  "Uptime [%]" : {
+    "value" : [],
+    "localisation" : {
+      "Xpath_table_raw" : "/html/body/table[3]/tbody/tr[{}]/td[2]/table/tbody/tr/td[2]",
+      "Xpath_item" : "/html/body/table[3]/tbody/tr[{}]/td[6]",
+      "key_word" : "Working time",
+      "function" : "extract_plus_1"
+    }
+  },
+  "Planned Downtime [%]" : {
+    "value" : [],
+    "localisation" : {
+      "Xpath_table_raw" : "/html/body/table[3]/tbody/tr[{}]/td[2]/table/tbody/tr/td[2]",
+      "Xpath_item" : "/html/body/table[3]/tbody/tr[{}]/td[6]",
+      "key_word" : "Planned downtime",
+      "function" : "extract"
+    }
+  },
+  "Unplanned Downtime [%]": {
+    "value" : [],
+    "localisation" : {
+      "Xpath_table_raw" : "/html/body/table[3]/tbody/tr[{}]/td[2]/table/tbody/tr/td[2]",
+      "Xpath_item" : "/html/body/table[3]/tbody/tr[{}]/td[6]",
+      "key_word" : "Unplanned downtime",
+      "function" : "extract"
+    }
+  },
+  "Total Rate Loss [%]": {
+    "value" : [],
+    "localisation" : {
+      "Xpath_table_raw" : "/html/body/table[3]/tbody/tr[{}]/td[2]/table/tbody/tr/td[2]",
+      "Xpath_item" : "/html/body/table[3]/tbody/tr[{}]/td[9]",
+      "key_word" : "Design speed loss",
+      "function" : "extract_split_number"
+    }
+  },
+  "External Upstream Stops (OPEN+ RM) [#]": {
+    "value" : [],
+    "localisation" : {
+      "Xpath_table_raw" : "/html/body/table[3]/tbody/tr[{}]/td[2]/table/tbody/tr/td[2]",
+      "Xpath_item" : "/html/body/table[3]/tbody/tr[{}]/td[3]",
+      "key_word" : "Stops caused from upstream equipment",
+      "function" : "extract"
+    }
+  },
+  "External Upstream Stops (OPEN+ RM) [UT Loss %]": {
+    "value" : [],
+    "localisation" : {
+      "Xpath_table_raw" : "/html/body/table[3]/tbody/tr[{}]/td[2]/table/tbody/tr/td[2]",
+      "Xpath_item" : "/html/body/table[3]/tbody/tr[{}]/td[6]",
+      "key_word" : "Stops caused from upstream equipment",
+      "function" : "extract"
+    }
+  },
+  "Unplanned Stops (OPEN+ RM) [#]": {
+    "value" : [],
+    "localisation" : {
+      "Xpath_table_raw" : "/html/body/table[3]/tbody/tr[{}]/td[2]/table/tbody/tr/td[2]",
+      "Xpath_item" : "/html/body/table[3]/tbody/tr[{}]/td[3]",
+      "key_word" : "Unplanned downtime",
+      "function" : "extract"
+    }
+  },
+  "MTBF [min] (OPEN+ RM)": {
+    "value" : [],
+    "localisation" : {
+      "Xpath_table_raw" : "/html/body/table[3]/tbody/tr[{}]/td[2]/table/tbody/tr/td[2]",
+      "Xpath_item" : "/html/body/table[3]/tbody/tr[{}]/td[8]/b",
+      "key_word" : "Working time",
+      "function" : "extract"
+    }
+  },
+  "MTTR [min] (OPEN+ RM)": {
+    "value" : [],
+    "localisation" : {
+      "Xpath_table_raw" : "/html/body/table[3]/tbody/tr[{}]/td[2]/table/tbody/tr/td[2]",
+      "Xpath_item" : "/html/body/table[3]/tbody/tr[{}]/td[9]/b",
+      "key_word" : "Working time",
+      "function" : "extract"
+    }
+  },
+  "CLTC-Number of External Stops [#]": {
+    "value" : [],
+    "localisation" : {
+      "Xpath_table_raw" : "/html/body/table[3]/tbody/tr[{}]/td[2]/table/tbody/tr/td[2]",
+      "Xpath_item" : "/html/body/table[3]/tbody/tr[{}]/td[3]",
+      "key_word" : "External downtime (Unplanned by definition)",
+      "function" : "extract"
+    }
+  },
+  "COMB-Number of External Stops [#]": {
+    "value" : [],
+    "localisation" : {
+      "Xpath_table_raw" : "/html/body/table[3]/tbody/tr[{}]/td[2]/table/tbody/tr/td[2]",
+      "Xpath_item" : "/html/body/table[3]/tbody/tr[{}]/td[3]",
+      "key_word" : "External downtime (Unplanned by definition)",
+      "function" : "extract"
+    }
+  },
+  "CTU-Number of External Stops [#]": {
+    "value" : [],
+    "localisation" : {
+      "Xpath_table_raw" : "/html/body/table[3]/tbody/tr[{}]/td[2]/table/tbody/tr/td[2]",
+      "Xpath_item" : "/html/body/table[3]/tbody/tr[{}]/td[3]",
+      "key_word" : "External downtime (Unplanned by definition)",
+      "function" : "extract"
+    }
+  },
+  "Packer-Number of External Stops [#]": {
+    "value" : [],
+    "localisation" : {
+      "Xpath_table_raw" : "/html/body/table[3]/tbody/tr[{}]/td[2]/table/tbody/tr/td[2]",
+      "Xpath_item" : "/html/body/table[3]/tbody/tr[{}]/td[3]",
+      "key_word" : "External downtime (Unplanned by definition)",
+      "function" : "extract"
+    }
+  },
+  "Missing Data Time [mins]": {
+    "value" : [],
+    "localisation" : {
+      "Xpath_table_raw" : "/html/body/table[3]/tbody/tr[{}]/td[2]/table/tbody/tr/td[2]",
+      "Xpath_item" : "/html/body/table[3]/tbody/tr[{}]/td[3]",
+      "key_word" : "Missing data time",
+      "function" : "extract"
+    }
+  },
+  "Valid Time [mins]": {
+    "value" : [],
+    "localisation" : {
+      "Xpath_table_raw" : "/html/body/table[3]/tbody/tr[{}]/td[2]/table/tbody/tr/td[2]",
+      "Xpath_item" : "/html/body/table[3]/tbody/tr[{}]/td[3]",
+      "key_word" : "Valid time",
+      "function" : "extract"
+    }
+  },
+  "Excluded Time [mins]": {
+    "value" : [],
+    "localisation" : {
+      "Xpath_table_raw" : "/html/body/table[3]/tbody/tr[{}]/td[2]/table/tbody/tr/td[2]",
+      "Xpath_item" : "/html/body/table[3]/tbody/tr[{}]/td[3]",
+      "key_word" : "Excluded time",
+      "function" : "extract"
+    }
+  },
+  "Working Time [mins]": {
+    "value" : [],
+    "localisation" : {
+      "Xpath_table_raw" : "/html/body/table[3]/tbody/tr[{}]/td[2]/table/tbody/tr/td[2]",
+      "Xpath_item" : "/html/body/table[3]/tbody/tr[{}]/td[3]",
+      "key_word" : "Working time",
+      "function" : "extract"
+    }
+  },
+  "Packer - Referance Run time [mins]": {
+    "value" : [],
+    "localisation" : {
+      "Xpath_table_raw" : "/html/body/table[3]/tbody/tr[{}]/td[2]/table/tbody/tr/td[2]",
+      "Xpath_item" : "/html/body/table[3]/tbody/tr[{}]/td[3]",
+      "key_word" : "Reference run time",
+      "function" : "extract"
+    }
+  }
+}

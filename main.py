@@ -1,3 +1,4 @@
+import time
 from datetime import datetime
 import json
 
@@ -5,6 +6,12 @@ import requests
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.edge.options import Options
+from selenium.webdriver.edge.service import Service
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.wait import WebDriverWait
+from selenium.common.exceptions import TimeoutException, NoSuchElementException
 import pdfkit
 
 import logging
@@ -12,239 +19,254 @@ import logging
 import os
 import errno
 
+from threading import Timer
+import pyautogui
 
-class LinkGenerator:
-    def __init__(self, ParametersFolder):
-        self.luInformation = self.loadJSON(ParametersFolder['LU_information'])
-        self.shiftInformation = self.loadJSON(ParametersFolder['SHIFT_information'])
-        self.masterLinks = self.loadJSON(ParametersFolder['LINKS_information'])
-        self.credentials = self.loadJSON(ParametersFolder['credentials'])
-
-        logging.info(f"Config Read correctly!")
-
-        # Multiplied by 1000, as grafana timestamp
-        self.start_timestamp = int(datetime.strptime(self.shiftInformation["start_date"],
-                                                     self.shiftInformation["format_date"]).timestamp()) * 1000
-        self.stop_timestamp = int(datetime.strptime(self.shiftInformation["end_date"],
-                                                    self.shiftInformation["format_date"]).timestamp()) * 1000
-        self.shift_length = self.shiftInformation["length_of_shift"] * 60 * 60 * 1000
-        self.no_of_shifts = self.shiftInformation["no_of_shifts"]
-        self.first_shift = self.shiftInformation["first_shift"]
-        self.smc_enabled_flag = self.shiftInformation["w_wo_SMC"]
-
-
-        self.shiftNames = self.generateVectors('lu11', self.generateShiftNames)
-        self.dates = self.generateVectors('lu11', self.generateDates)
-        self.grafanaLinks = self.generateVectors('lu11', self.generatelinkForGrafana)
-        self.SPALossTreeLinks = self.generateVectors('lu11', self.generateLinkForLossTree)
-        self.LineOverviewLinks = self.generateVectors('lu11', self.generateLinkForLineOverview)
-        self.SPALossTreeLinksModifier = self.modifiersForLossTree('lu11')
-
-    def get(self):
-        return
-
-    def loadJSON(self, FileName):
-        with open(FileName, "r") as file:
-            jsonContent = file.read()
-            jsonList = json.loads(jsonContent)
-            logging.debug(f"File: {FileName} read correctly!")
-            #logging.debug(f"Output: {jsonContent}")
-        return jsonList
-
-    def generateVectors(self, key, function):
-        #Function to generate vectors, which later will be used as config for WebScrapper
-        timestamp_tmp = self.start_timestamp
-        shift_no_tmp = self.first_shift
-
-        firstRun = True
-        itemList = []
-        while timestamp_tmp < self.stop_timestamp:
-
-            itemList = function(timestamp_tmp, shift_no_tmp, key, firstRun, itemList)
-
-
-
-            shift_no_tmp = self.generateShiftNumber(shift_no_tmp, self.no_of_shifts)
-            timestamp_tmp += self.shift_length
-            firstRun = False
-        return itemList
-
-    def generatelinkForGrafana(self, timestamp_tmp, shift_no_tmp, key, firstRun, linkList):
-        link = self.masterLinks["address_Grafana"].format(LuHash=self.luInformation["LU_list"][key]["LuHash"],
-                                                          LuName=key,
-                                                          orgId=self.luInformation["LU_list"][key]["orgId"],
-                                                          StartTimestamp=timestamp_tmp,
-                                                          EndTimestamp=timestamp_tmp+self.shift_length)
-        linkList.append(link)
-        return linkList
-
-    def generateLinkForLossTree(self, timestamp_tmp, shift_no_tmp, key, firstRun, linkList):
-        date = datetime.fromtimestamp(timestamp_tmp / 1000).date().__str__()
-        link = self.masterLinks["address_Loss_Tree"].format(login=self.credentials["username"],
-                                                            password=self.credentials["password"],
-                                                            spaLineName=self.luInformation["LU_list"][key]["spaLineName"],
-                                                            Date=date,
-                                                            StartShift=shift_no_tmp,
-                                                            EndShift=shift_no_tmp
-                                                            )
-        linkList.append(link)
-        return linkList
-
-    def generateLinkForLineOverview(self, timestamp_tmp, shift_no_tmp, key, firstRun, linkList):
-        if firstRun:
-            previousDate = ""
-        else:
-            previousDate = datetime.fromtimestamp((timestamp_tmp-self.shift_length) / 1000).date().__str__()
-        date = datetime.fromtimestamp(timestamp_tmp / 1000).date().__str__()
-        if date == previousDate:
-            link = "None"
-        else:
-            link = self.masterLinks["address_Line_Over"].format(login=self.credentials["username"],
-                                                                password=self.credentials["password"],
-                                                                spaLineName=self.luInformation["LU_list"][key]["spaLineName"],
-                                                                Date=date
-                                                                )
-        linkList.append(link)
-        return linkList
-
-    def modifiersForLossTree(self, key):
-        modifier = {"LossTreeLinkModifier":{}}
-        for machine in self.luInformation["LU_list"][key]["spaLineNames"]:
-            modifier["LossTreeLinkModifier"].update(
-                {machine: self.luInformation["LU_list"][key]["spaLineNames"][machine]})
-
-        return modifier
-
-    def generateDates(self, timestamp_tmp, shift_no_tmp, key, firstRun, shiftList):
-        date = datetime.fromtimestamp(timestamp_tmp / 1000).date().__str__()
-        shiftList.append(date)
-        return shiftList
-    def generateShiftNames(self, timestamp_tmp, shift_no_tmp, key, firstRun, shiftList):
-        shiftList.append("Shift{}_{}".format(shift_no_tmp, key))
-        return shiftList
-
-    def generateShiftNumber(self, shift_no_tmp, no_of_shifts):
-        if shift_no_tmp >= no_of_shifts:
-            shift_no_tmp = 1
-        else:
-            shift_no_tmp += 1
-        #logging.debug(f"Shift Generated correctly")
-        return shift_no_tmp
-
-
-
-
-
-    def _make_dir(path):
-        try:
-            os.makedirs(path, exist_ok=True)  # Python>3.2
-        except TypeError:
-            try:
-                os.makedirs(path)
-            except OSError as exc: # Python >2.5
-                if exc.errno == errno.EEXIST and os.path.isdir(path):
-                    pass
-                else:
-                    logging.info(f"Making Directory failed!")
-                    raise
-
-def main():
-    logging.basicConfig(level=logging.DEBUG)
-
-    Parameters = {'LU_information' : "Parameters/LU_information.json",
-                  'SHIFT_information' : "Parameters/SHIFT_information.json",
-                  'LINKS_information' : "Parameters/LINKS_information.json",
-                  'credentials' : "Parameters/credentials.json"}
-
-    generateLinks = LinkGenerator(Parameters)
-
-
+from LinkGenerator import LinkGenerator
 
 
 class ScraperConfiguration:
-    def __init__(self):
-        self.links_to_process = {}
-        self.folders_structure = {}
-        self.smc_enabled_flag = ""
+    def __init__(self, parametersFolder):
+        #self.parameters = parametersFolder
+        generateLinks = LinkGenerator(parametersFolder)
 
+        self.target_urls = generateLinks.getLinksToProcess()
+        self.folders_structure = generateLinks.getFolderShiftsInfo()
+
+        self.credentials = generateLinks.credentials
+
+        self.smc_enabled_flag = generateLinks.getSmcEnabled()
+        self.no_of_shifts = generateLinks.no_of_shifts
+
+        logging.info(f"Configuration read correctly!")
+
+        self.service_object = Service("msedgedriver")
+        self.options = Options()
+        self.options.add_experimental_option("detach", True)
+        self.options.add_argument("-inprivate")
 
 class WebScraper:
-    def __init__(self):
-        self.config = ScraperConfiguration()
+    def __init__(self, Parameters, ParserParameters):
+        self.config = ScraperConfiguration(Parameters)
+        
+        self.parser = PageParser(ParserParameters)
+
+        #print(self.config.folders_structure['dates'][0])
+
+        self.scrape()
 
     def scrape(self):
         try:
             # Initialize scraping process
-            session = requests.Session()
-            session.headers.update({'User-Agent': self.config.user_agent})
+            driver = webdriver.Edge(service=self.config.service_object, options=self.config.options)
+            driver.maximize_window()
 
-            for url in self.config.target_urls:
-                # Authenticate for specific links
-                if url == "https://example.com/login":
-                    self.authenticate(session, url)
+            Timer(10, pyautogui.press, ["esc"]).start()
 
-                response = session.get(url)
-                response.raise_for_status()  # Raise exception for non-200 status codes
+            #self._get_grafana(driver)
+            self._get_loss_tree(driver)
+            print(self.parser.data)
 
-                html_content = response.text
-
-                # Parse the HTML content
-                parser = PageParser()
-                parsed_data = parser.parse(html_content)
-
-                # Store the parsed data
-                data_store = DataStore()
-                data_store.save(parsed_data)
-
-                # Capture screenshot
-                screenshot_maker = ScreenshotMaker()
-                screenshot_maker.capture(url)
-
-                # Print long page to PDF
-                if parsed_data.is_long_page:
-                    pdf_printer = PDFPrinter()
-                    pdf_printer.print_to_pdf(url)
-
-            session.close()
+            driver.close()
 
         except requests.exceptions.RequestException as e:
             print(f"An error occurred while making a request: {e}")
         except Exception as e:
             print(f"An error occurred: {e}")
 
-    def authenticate(self, session, url):
+
+    def _get_loss_tree(self, driver):
+        #print(self.config.target_urls)
+        for iterator, url in enumerate(self.config.target_urls['SPALossTreeLinks']):
+            driver.get(url)
+            time.sleep(2)
+            Timer(2, pyautogui.press, ["esc"]).start()
+
+            Xpath_allUnplannedDowntime = '//*[@id="section_AllUnplannedDT"]/tbody/tr/td[4]/table/tbody/tr/td/input'
+            Xpath_byPoSection = '/html/body/table[3]/tbody/tr[55]/td[2]/b'
+            '/html/body/table[3]/tbody/tr[55]/td[2]/b'
+            element_present = None
+            while element_present == None:
+                time.sleep(2)
+                if str(driver.page_source).lower().find("webdab") != -1:
+                    driver.refresh()
+                elif str(driver.page_source) == "<html><head></head><body></body></html>" or \
+                        str(driver.page_source).find("-DescriptionLT-") != -1:
+                    driver.refresh()
+                else:
+                    print("else")
+                print(element_present)
+                try:
+                    element_present = EC.presence_of_element_located((By.XPATH, Xpath_byPoSection))
+                    WebDriverWait(driver, 10).until(element_present)
+                except TimeoutException:
+                    driver.refresh()
+
+            self.parser.parse(driver, "crimper")
+
+            time.sleep(2)
+
+            #self._take_screenshot(driver, iterator, "03_Grafana Line Overview.png")
+    def _get_grafana(self, driver):
+        for iterator, url in enumerate(self.config.target_urls['grafanaLinks']):
+            driver.get(url)
+            time.sleep(5)
+            if iterator == 0:
+                self._authenticate_grafana(driver)
+
+            driver.execute_script("document.body.style.zoom='45%'")
+
+            try:
+                element_present = EC.presence_of_element_located((By.CLASS_NAME, "panel-loading"))
+
+                WebDriverWait(driver, 10).until(element_present)
+
+                WebDriverWait(driver, 20).until_not(element_present)
+            except TimeoutException:
+                logging.debug(f"Grafana authenticated correctly!")
+                pass
+
+            self._take_screenshot(driver, iterator, "03_Grafana Line Overview.png")
+
+    def _authenticate_grafana(self, driver):
         # Authentication logic for specific URLs
         # Modify this method as per your authentication requirements
-        if url == "https://example.com/login":
-            payload = {
-                'username': 'your_username',
-                'password': 'your_password'
-            }
-            session.post(url, data=payload)
+        time.sleep(5)
+
+        xPath_Login = '//*[@id="reactRoot"]/div[1]/main/div[3]/div/div[2]/div/div/form/div[1]/div[2]/div/div/input'
+        xPath_Passwd = '//*[@id="current-password"]'
+        xPath_Submit = '//*[@id="reactRoot"]/div[1]/main/div[3]/div/div[2]/div/div[1]/form/button'
+        driver.find_element(By.XPATH, xPath_Login).send_keys(self.config.credentials["username"])
+        driver.find_element(By.XPATH, xPath_Passwd).send_keys(self.config.credentials["password"])
+        driver.find_element(By.XPATH, xPath_Submit).click()
+        time.sleep(5)
+
+    def _take_screenshot(self, driver, iterator, fileName):
+        self._make_dir('./Output/{}/{}'.format(
+            self.config.folders_structure['dates'][iterator],
+            self.config.folders_structure['shifts'][iterator]))
+
+        driver.save_screenshot('./Output/{}/{}/{}'.format(
+            self.config.folders_structure['dates'][iterator],
+            self.config.folders_structure['shifts'][iterator],
+            fileName
+        ))
+
+    @staticmethod
+    def _make_dir(path):
+        try:
+            os.makedirs(path, exist_ok=True)  # Python>3.2
+        except TypeError:
+            try:
+                os.makedirs(path)
+            except OSError as exc:  # Python >2.5
+                if exc.errno == errno.EEXIST and os.path.isdir(path):
+                    pass
+                else:
+                    raise
 
 
 class PageParser:
-    def parse(self, html_content):
+    def __init__(self, file):
+        self.data = {}
+        self.parameters = {}
+        self._get_parse_parameters(file)
+
+        #print(self.data)
+
+    def parse(self, driver, machine):
         try:
             # Parsing logic using BeautifulSoup or any other HTML parsing library
             # Extract relevant data and return as structured objects
-
+            #self.data['Date'] = "Sample Title"
+            #self.data['Shift'] = "Sample Description"
             # Sample data model
-            data = DataModel()
-            data.title = "Sample Title"
-            data.description = "Sample Description"
-            data.is_long_page = True  # Assume the page is long for demonstration purposes
-            return data
+            for key in self.data:
+                #if self.parameters[key]["localisation"]["function"] == "extract":
+                Xpath_Row = self.parameters[key]["localisation"]["Xpath_table_raw"]
+                key_word = self.parameters[key]["localisation"]["key_word"]
+                rowsToAdd = self._find_row_in_table(driver, Xpath_Row, key_word)
+                Xpath_Value = self.parameters[key]["localisation"]["Xpath_item"].format(rowsToAdd)
+                print(Xpath_Value)
+
+
+
+                #elif  self.parameters[key]["localisation"]["function"] == "extract_plus_1":
+
+                value = driver.find_element(By.XPATH, Xpath_Value)
+
+                print(value)
+                self.data[key].append(value.text)
+                print(self.data[key])
+
+            #print(self.data)
+            #return self.data
+
+
 
         except Exception as e:
-            print(f"An error occurred while parsing the page: {e}")
+            logging.error(f"An error occurred while parsing the page: {e}")
+
+    @staticmethod
+    def extract(self, Xpath_Row, rowsToAdd, Xpath_Value):
+        pass
+    def _get_parse_parameters(self, file_name):
+        self.parameters = self._loadJSON(file_name)
+
+        for key in self.parameters:
+            self.data[key] = []
+
+    def _loadJSON(self, FileName):
+        with open(FileName, "r") as file:
+            jsonContent = file.read()
+            jsonList = json.loads(jsonContent)
+            logging.debug(f"File: {FileName} read correctly!")
+        return jsonList
+
+    def _find_row_in_table(self, driver, Xpath_linePerformance, parameter, default=0):
+        # Calculate rows modified, if PO was changed during the shift
+        for i in range(1000):
+            try:
+                elem = driver.find_element(By.XPATH, Xpath_linePerformance.format(default + i))
+                if parameter == "Reference run time":
+                    if "Reference run time" in elem.text:
+                        rowsToAddByPO = i
+                        return rowsToAddByPO
+                        break
+                if elem.text == parameter:
+                    rowsToAddByPO = i
+                    return rowsToAddByPO
+                    break
+            # return True
+            except NoSuchElementException:
+                pass
+        return 1
+
+    @staticmethod
+    def is_float(string):
+        try:
+            float(string)
+            return True
+        except ValueError:
+            return False
+
+def main():
+    logging.basicConfig(level=logging.DEBUG)
+
+    general_parameters = {'LU_information' : "Parameters/LU_information.json",
+                  'SHIFT_information' : "Parameters/SHIFT_information.json",
+                  'LINKS_information' : "Parameters/LINKS_information.json",
+                  'credentials' : "Parameters/credentials.json"}
+
+    parser_parameters = "./Parameters/Parser_configuration_SPA.json"
+
+    #generateLinks = LinkGenerator(general_parameters)
+
+    #configuration = ScraperConfiguration(general_parameters)
+
+    scraper = WebScraper(general_parameters, parser_parameters)
 
 
-class DataModel:
-    def __init__(self):
-        self.title = ""
-        self.description = ""
-        self.is_long_page = False
 
 
 class DataStore:
@@ -256,31 +278,7 @@ class DataStore:
             print(f"An error occurred while saving the data: {e}")
 
 
-class ScraperConfiguration:
-    def __init__(self):
-        self.target_urls = [
-            "https://example.com",
-            "https://example.com/login"
-        ]
-        self.user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) " \
-                           "Chrome/90.0.4430.212 Safari/537.36 "
 
-
-class ScreenshotMaker:
-    def __init__(self):
-        options = Options()
-        options.add_argument("--headless")  # Run browser in headless mode
-        self.driver = webdriver.Chrome(options=options)
-
-    def capture(self, url):
-        try:
-            self.driver.get(url)
-            # Capture screenshot and save it to the desired location
-            self.driver.save_screenshot("screenshot.png")
-        except Exception as e:
-            print(f"An error occurred while capturing the screenshot: {e}")
-        finally:
-            self.driver.quit()
 
 
 if __name__ == "__main__":
